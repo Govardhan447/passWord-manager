@@ -61,14 +61,14 @@ class ManagerInputs extends Component {
     classNameDetails: classnamesList,
     isPasswordShow: false,
     searchListDetails: searchListItems,
-    showPropertie: 'NOPASSWORDS',
+    showPropertie: constantValues.noPassword,
   }
 
   onsubmitForm = event => {
     event.preventDefault()
     const {website, username, password, classNameDetails} = this.state
+
     const randomNum = Math.ceil(Math.random() * 10)
-    console.log(randomNum)
 
     const randomclassname = classNameDetails.filter(
       eachitem => eachitem.id === randomNum,
@@ -81,7 +81,6 @@ class ManagerInputs extends Component {
       password,
       classname: randomclassname[0].classname,
     }
-    console.log(newList)
 
     this.setState(prevState => ({
       passwordMangerListDetails: [
@@ -91,6 +90,7 @@ class ManagerInputs extends Component {
       website: '',
       username: '',
       password: '',
+      showPropertie: constantValues.setPassword,
     }))
   }
 
@@ -100,20 +100,35 @@ class ManagerInputs extends Component {
 
     const updateList = passwordMangerListDetails.filter(item => item.id !== id)
 
-    this.setState({searchList: updateList})
+    this.setState({
+      passwordMangerListDetails: updateList,
+      showPropertie: constantValues.setPassword,
+    })
   }
 
   onchangeSearch = event => {
     const {passwordMangerListDetails} = this.state
     const searchvalue = event.target.value
+    this.setState({searchValue: searchvalue})
 
+    console.log('searching')
     const searchList = passwordMangerListDetails.filter(item =>
       item.website.toLowerCase().includes(searchvalue.toLowerCase()),
     )
-    this.setState({
-      searchListDetails: searchList,
-      searchValue: searchvalue,
-    })
+    console.log(searchList)
+    if (searchList.length === 0) {
+      this.setState({showPropertie: constantValues.noPassword})
+    } else if (event.target.value === '') {
+      this.setState({
+        showPropertie: constantValues.setPassword,
+        searchListDetails: searchListItems,
+      })
+    } else {
+      this.setState({
+        searchListDetails: searchList,
+        showPropertie: constantValues.searchPassword,
+      })
+    }
   }
 
   onchangeWebsite = event => {
@@ -132,8 +147,18 @@ class ManagerInputs extends Component {
     this.setState(prevState => ({isPasswordShow: !prevState.isPasswordShow}))
   }
 
+  getPasswordListStatus = () => {
+    const {passwordMangerListDetails} = this.state
+    if (passwordMangerListDetails.length === 0) {
+      this.setState({showPropertie: constantValues.noPassword})
+    } else {
+      this.setState({showPropertie: constantValues.setPassword})
+    }
+  }
+
   getInputsContainer = () => {
     const {website, username, password} = this.state
+
     return (
       <div className="password-manager-container">
         <form className="inputs-container" onSubmit={this.onsubmitForm}>
@@ -206,19 +231,18 @@ class ManagerInputs extends Component {
       showPropertie,
       isPasswordShow,
     } = this.state
-    if (passwordManagerList.length !== 0) {
-      this.setState({showPropertie: constantValues.setPassword})
-    } else if (searchListDetails !== 0) {
-      this.setState({showPropertie: constantValues.searchPassword})
-    } else {
-      this.setState({showPropertie: constantValues.noPassword})
-    }
+
+    const passwordlistItems = passwordMangerListDetails.length
+
     switch (showPropertie) {
       case constantValues.noPassword:
+        console.log('no Password')
         return this.getNoPasswordImage()
       case constantValues.setPassword:
-        return (
-          <>
+        return passwordlistItems === 0 ? (
+          this.getNoPasswordImage()
+        ) : (
+          <ul className="password-items-container-list">
             {passwordMangerListDetails.map(item => (
               <DisplayInputItems
                 passwordDetails={item}
@@ -227,11 +251,11 @@ class ManagerInputs extends Component {
                 isPasswordShow={isPasswordShow}
               />
             ))}
-          </>
+          </ul>
         )
       case constantValues.searchPassword:
         return (
-          <>
+          <ul className="password-items-container-list">
             {searchListDetails.map(item => (
               <DisplayInputItems
                 passwordDetails={item}
@@ -240,7 +264,7 @@ class ManagerInputs extends Component {
                 isPasswordShow={isPasswordShow}
               />
             ))}
-          </>
+          </ul>
         )
       default:
         return null
@@ -254,12 +278,22 @@ class ManagerInputs extends Component {
         src="https://assets.ccbp.in/frontend/react-js/no-passwords-img.png"
         alt="no passwords"
       />
-      <p className="password-heading">No Passwords</p>
+      <p className="noPassword-heading">No Passwords</p>
     </div>
   )
 
   render() {
-    const {searchValue, passwordMangerListDetails} = this.state
+    const {
+      searchValue,
+      passwordMangerListDetails,
+      showPropertie,
+      searchListDetails,
+    } = this.state
+
+    const passwordsItems =
+      showPropertie === constantValues.setPassword
+        ? passwordMangerListDetails
+        : searchListDetails
     return (
       <div className="bg-container">
         <div>
@@ -272,12 +306,10 @@ class ManagerInputs extends Component {
         {this.getInputsContainer()}
         <div className="password-items-container">
           <div className="password-search-container">
-            <p className="password-heading">
-              Your Passwords{' '}
-              <span className="password-counts">
-                {passwordMangerListDetails.length}
-              </span>
-            </p>
+            <h1 className="password-heading">
+              Your Passwords
+              <p className="password-counts">{passwordsItems.length}</p>
+            </h1>
             <div className="search-container">
               <div className="search-image">
                 <img
@@ -306,9 +338,7 @@ class ManagerInputs extends Component {
               Show Passwords
             </label>
           </div>
-          <ul className="password-items-container-list">
-            {this.getPasswordListItems()}
-          </ul>
+          <ul>{this.getPasswordListItems()}</ul>
         </div>
       </div>
     )
