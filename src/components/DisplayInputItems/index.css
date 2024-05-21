@@ -69,3 +69,15 @@
   background-color: #ffffff;
   color: #000000;
 }
+.stars {
+  width: 180px;
+  height: 30px;
+}
+.password-Details-container {
+  width: 180px;
+  height: 80%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
